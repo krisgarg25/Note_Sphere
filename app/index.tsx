@@ -9,7 +9,7 @@ export default function Index() {
         alignItems: "center",
       }}
     >
-      <Text>Edit appndex.tsx to edit this screen.</Text>
+      <Text>Edit appndex.tsx to edi this screen.</Text>
     </View>
   );
 }

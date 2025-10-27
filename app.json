@@ -23,7 +23,7 @@
       "package": "com.krisgarg.Note_Shere"
     },
     "web": {
-      "output": "static",
+      "output": "server",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [

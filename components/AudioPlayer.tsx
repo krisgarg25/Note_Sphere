@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, TouchableOpacity, Platform, Pressable, LayoutChangeEvent } from 'react-native';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Audio } from "expo-av";
 
@@ -8,12 +8,24 @@ interface AudioPlayerProps {
     isSaved: boolean;
 }
 
-export const AudioPlayer: React.FC<AudioPlayerProps> = ({ uri, isSaved }) => {
+export const AudioPlayer = forwardRef((props: AudioPlayerProps, ref) => {
+    const { uri, isSaved } = props;
+
     const [sound, setSound] = useState<Audio.Sound | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [duration, setDuration] = useState<number>(0);
     const [position, setPosition] = useState<number>(0);
     const [progressBarWidth, setProgressBarWidth] = useState<number>(0);
+
+    // Expose seekTo method to parent component
+    useImperativeHandle(ref, () => ({
+        seekTo: async (milliseconds: number) => {
+            if (sound) {
+                await sound.setPositionAsync(milliseconds);
+                await sound.playAsync();  // Auto-play after seeking
+            }
+        }
+    }));
 
     useEffect(() => {
         loadAudio();
@@ -116,35 +128,25 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ uri, isSaved }) => {
 
     return (
         <View style={styles.audioPlayerContainer}>
-            {/* Progress Bar - Clickable */}
             <Pressable onPress={handleProgressBarPress} style={styles.progressBarContainer}>
                 <View
                     style={styles.progressBarBackground}
                     onLayout={onProgressBarLayout}
                 >
                     <View
-                        style={[
-                            styles.progressBarFill,
-                            { width: `${progress}%` }
-                        ]}
+                        style={[styles.progressBarFill, { width: `${progress}%` }]}
                     />
-                    {/* Progress dot */}
                     <View
-                        style={[
-                            styles.progressDot,
-                            { left: `${progress}%` }
-                        ]}
+                        style={[styles.progressDot, { left: `${progress}%` }]}
                     />
                 </View>
             </Pressable>
 
-            {/* Time Display */}
             <View style={styles.timeRow}>
                 <Text style={styles.timeText}>{formatTime(position)}</Text>
                 <Text style={styles.timeText}>{formatTime(duration)}</Text>
             </View>
 
-            {/* Controls */}
             <View style={styles.controlsContainer}>
                 <TouchableOpacity onPress={seekBackward} style={styles.controlButton}>
                     <Ionicons name="play-back" size={20} color="#6b7280" />
@@ -165,7 +167,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ uri, isSaved }) => {
             </View>
         </View>
     );
-};
+});
 
 const styles = StyleSheet.create({
     audioPlayerContainer: {

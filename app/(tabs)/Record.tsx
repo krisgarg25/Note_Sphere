@@ -6,11 +6,15 @@ import { useRouter } from "expo-router";
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as FileSystem from 'expo-file-system/legacy';
+import * as DocumentPicker from 'expo-document-picker';
 
 export default function Record() {
     const [recording, setRecording] = useState<Audio.Recording | null>(null);
     const [isPaused, setIsPaused] = useState(false);
     const [duration, setDuration] = useState(0);
+    const [showNameModal, setShowNameModal] = useState(false);
+    const [recordingName, setRecordingName] = useState('');
+    const [pendingUri, setPendingUri] = useState<string | null>(null);
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const router = useRouter();
 
@@ -43,6 +47,56 @@ export default function Record() {
             minutes: mins.toString().padStart(2, '0'),
             seconds: secs.toString().padStart(2, '0')
         };
+    };
+
+    const formatDuration = (seconds: number) => {
+        const hrs = Math.floor(seconds / 3600);
+        const mins = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+
+        if (hrs > 0) {
+            return `${hrs}h ${mins}m ${secs}s`;
+        } else if (mins > 0) {
+            return `${mins}m ${secs}s`;
+        } else {
+            return `${secs}s`;
+        }
+    };
+
+    const handleUploadAudio = async () => {
+        try {
+            const result = await DocumentPicker.getDocumentAsync({
+                type: ['audio/*'],
+                copyToCacheDirectory: true,
+            });
+
+            if (result.canceled) {
+                return;
+            }
+
+            const file = result.assets[0];
+
+            const validTypes = ['audio/mpeg', 'audio/mp4', 'audio/wav', 'audio/m4a', 'audio/x-m4a', 'audio/mp3'];
+            if (!validTypes.includes(file.mimeType || '')) {
+                Alert.alert('Invalid File', 'Please select a valid audio file (MP3, M4A, WAV)');
+                return;
+            }
+
+            const maxSize = 100 * 1024 * 1024;
+            if (file.size && file.size > maxSize) {
+                Alert.alert('File Too Large', 'Please select an audio file smaller than 100MB');
+                return;
+            }
+
+            // Show name modal for uploaded file
+            setPendingUri(file.uri);
+            setRecordingName(file.name.replace(/\.[^/.]+$/, '')); // Remove extension
+            setShowNameModal(true);
+
+        } catch (error) {
+            console.error('Error picking audio:', error);
+            Alert.alert('Error', 'Failed to select audio file');
+        }
     };
 
     const startRecording = async () => {
@@ -110,7 +164,17 @@ export default function Record() {
             setIsPaused(false);
 
             if (uri) {
-                await saveAndNavigate(uri);
+                // Show name modal
+                setPendingUri(uri);
+                const timestamp = new Date().toLocaleString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                });
+                setRecordingName(`Recording ${timestamp}`);
+                setShowNameModal(true);
             }
         } catch (err) {
             console.error('Stop error:', err);
@@ -118,19 +182,30 @@ export default function Record() {
         }
     };
 
-    const saveAndNavigate = async (tempUri: string) => {
+    const handleSaveWithName = async () => {
+        if (!pendingUri) return;
+
+        const finalName = recordingName.trim() || 'Untitled Recording';
+
         try {
             const timestamp = Date.now();
             const fileName = `recording-${timestamp}.m4a`;
             const permanentUri = `${FileSystem.documentDirectory}${fileName}`;
 
             await FileSystem.copyAsync({
-                from: tempUri,
+                from: pendingUri,
                 to: permanentUri
             });
 
-            router.push(`/Recordings?uri=${encodeURIComponent(permanentUri)}`);
+            // Navigate with name
+            router.push(`/Recordings?uri=${encodeURIComponent(permanentUri)}&name=${encodeURIComponent(finalName)}`);
+
+            // Reset
             setDuration(0);
+            setPendingUri(null);
+            setRecordingName('');
+            setShowNameModal(false);
+
         } catch (error) {
             console.error('Save error:', error);
             Alert.alert('Error', 'Failed to save recording');
@@ -174,10 +249,22 @@ export default function Record() {
 
             <SafeAreaView style={styles.safeArea}>
                 <View style={styles.header}>
-                    <Text style={styles.headerTitle}>Voice Recorder</Text>
-                    <Text style={styles.headerSubtitle}>
-                        {recording ? (isPaused ? '⏸ Paused' : '● Recording') : 'Ready to record'}
-                    </Text>
+                    <View>
+                        <Text style={styles.headerTitle}>Voice Recorder</Text>
+                        <Text style={styles.headerSubtitle}>
+                            {recording ? (isPaused ? '⏸ Paused' : '● Recording') : 'Ready to record'}
+                        </Text>
+                    </View>
+
+                    {!recording && (
+                        <TouchableOpacity
+                            onPress={handleUploadAudio}
+                            activeOpacity={0.7}
+                            style={styles.uploadButton}
+                        >
+                            <Ionicons name="cloud-upload-outline" size={22} color="#3b82f6" />
+                        </TouchableOpacity>
+                    )}
                 </View>
 
                 <View style={styles.content}>
@@ -270,10 +357,63 @@ export default function Record() {
                                 </LinearGradient>
                             </TouchableOpacity>
                             <Text style={styles.micLabel}>Tap to Start Recording</Text>
+
+                            <Text style={styles.uploadHint}>
+                                or tap <Ionicons name="cloud-upload-outline" size={14} color="#3b82f6" /> above to upload
+                            </Text>
                         </View>
                     )}
                 </View>
             </SafeAreaView>
+
+            {/* Name Modal */}
+            <Modal
+                visible={showNameModal}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setShowNameModal(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <View style={styles.modalIconContainer}>
+                            <LinearGradient
+                                colors={['#3b82f6', '#2563eb']}
+                                style={styles.modalIcon}
+                            >
+                                <Ionicons name="mic" size={40} color="white" />
+                            </LinearGradient>
+                        </View>
+
+                        <Text style={styles.modalTitle}>Name Your Recording</Text>
+                        <Text style={styles.modalDuration}>Duration: {formatDuration(duration)}</Text>
+
+                        <View style={styles.inputWrapper}>
+                            <Ionicons name="create-outline" size={20} color="#6b7280" style={styles.inputIcon} />
+                            <TextInput
+                                style={styles.input}
+                                value={recordingName}
+                                onChangeText={setRecordingName}
+                                placeholder="Enter a name..."
+                                placeholderTextColor="#9ca3af"
+                                autoFocus
+                                maxLength={50}
+                            />
+                        </View>
+
+                        <TouchableOpacity onPress={handleSaveWithName} activeOpacity={0.8}>
+                            <LinearGradient
+                                colors={['#3b82f6', '#2563eb']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                                style={styles.saveButton}
+                            >
+                                <Ionicons name="checkmark-circle" size={22} color="white" />
+                                <Text style={styles.saveButtonText}>Save Recording</Text>
+                            </LinearGradient>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -290,6 +430,9 @@ const styles = StyleSheet.create({
         paddingHorizontal: 24,
         paddingTop: 8,
         paddingBottom: 16,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
     },
     headerTitle: {
         fontSize: 32,
@@ -302,6 +445,27 @@ const styles = StyleSheet.create({
         color: '#6b7280',
         marginTop: 4,
         fontWeight: '500',
+    },
+    uploadButton: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: '#eff6ff',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 2,
+        borderColor: '#bfdbfe',
+        ...Platform.select({
+            ios: {
+                shadowColor: '#3b82f6',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.15,
+                shadowRadius: 8,
+            },
+            android: {
+                elevation: 4,
+            },
+        }),
     },
     content: {
         flex: 1,
@@ -513,6 +677,11 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: '#6b7280',
         marginTop: 20,
+    },
+    uploadHint: {
+        fontSize: 13,
+        color: '#9ca3af',
+        marginTop: 12,
     },
     modalOverlay: {
         flex: 1,

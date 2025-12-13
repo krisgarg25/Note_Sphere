@@ -1,50 +1,88 @@
-# Welcome to your Expo app 👋
+# 🎙️ SmartNotes - AI-Powered Audio Note Taking App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+<div align="center">
 
-## Get started
+![React Native](https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![Expo](https://img.shields.io/badge/Expo-000020?style=for-the-badge&logo=expo&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
+![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
 
-1. Install dependencies
+**Transform your voice recordings into organized, searchable notes with AI-powered transcription and summaries.**
 
-   ```bash
-   npm install
-   ```
+[Features](#-features) • [Demo](#-demo) • [Installation](#-installation) • [Usage](#-usage) • [Tech Stack](#-tech-stack)
 
-2. Start the app
+</div>
 
-   ```bash
-   npx expo start
-   ```
+---
 
-In the output, you'll find options to open the app in a
+## ✨ Features
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### 🎤 Smart Recording
+- High-quality audio recording with real-time waveform visualization
+- Pause/resume functionality during recording
+- Auto-save with custom naming
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### 🤖 AI-Powered Processing
+- **Automatic Transcription** - Convert speech to text with timestamps
+- **Intelligent Summaries** - Get structured notes with key points, concepts, and action items
+- **Powered by Google Gemini AI** - Fast and accurate processing
 
-## Get a fresh project
+### 📝 Rich Note Experience
+- **Dual View Modes** - Switch between Summary and full Transcript
+- **Clickable Timestamps** - Jump to any point in the audio instantly
+- **Bold Headings & Formatting** - Well-structured, readable notes
+- **Comprehensive Coverage** - No arbitrary limits, capture everything important
 
-When you're ready, run:
+### 🎵 Advanced Audio Player
+- Beautiful floating player with progress bar
+- Seek forward/backward (10s)
+- Visual progress indicator
+- Persistent across scrolling
 
-```bash
-npm run reset-project
-```
+### 🎨 Beautiful UI/UX
+- Modern, clean interface with smooth animations
+- Tab-based navigation with pill design
+- Slide-down exit animation
+- Responsive and intuitive controls
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### 💾 Cloud Storage
+- Firebase integration for secure storage
+- Sync across devices
+- Reliable audio file hosting
 
-## Learn more
+---
 
-To learn more about developing your project with Expo, look at the following resources:
+## 📱 Demo
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### Screenshots
 
-## Join the community
+<div align="center">
+<table>
+  <tr>
+    <td><img src="screenshots/home.png" width="250" alt="Home Screen"/></td>
+    <td><img src="screenshots/recording.png" width="250" alt="Recording"/></td>
+    <td><img src="screenshots/detail.png" width="250" alt="Detail View"/></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Home Screen</b></td>
+    <td align="center"><b>Recording</b></td>
+    <td align="center"><b>Notes View</b></td>
+  </tr>
+</table>
+</div>
 
-Join our community of developers creating universal apps.
+---
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## 🚀 Installation
+
+### Prerequisites
+
+- Node.js (v16 or higher)
+- npm or yarn
+- Expo CLI
+- Firebase account
+- Google AI Studio API key
+
+### Setup
+
+1. **Clone the repository**
